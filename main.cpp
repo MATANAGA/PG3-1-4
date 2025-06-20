@@ -1,59 +1,63 @@
-#include <stdio.h>
-#include <Windows.h>
-#include <time.h>
-#include <functional>
+#include <iostream>
+using namespace std;
 
-// 結果表示関数（コールバックとして使用）
-void DispResult(int* dummy, int* userChoice) {
-    int dice = rand() % 2; // 0: 丁（偶数）、1: 半（奇数）
+class Enemy {
+public:
+    void Update();
 
-    if (dice == *userChoice) {
-        if (dice == 0)
-            printf("%dで丁(偶数)でした。当たり！\n", dice);
-        else
-            printf("%dで半(奇数)でした。当たり！\n", dice);
-    }
-    else {
-        if (dice == 0)
-            printf("%dで丁(偶数)でした。はずれ！\n", dice);
-        else
-            printf("%dで半(奇数)でした。はずれ！\n", dice);
+    void Approach(); // 接近
+    void Attack();   // 攻撃
+    void Retreat();  // 離脱
+
+    // 関数ポインタのテーブル
+    static void (Enemy::* stateTable[])();
+
+private:
+    int index = 0; // 現在の状態を示すインデックス（0: 接近, 1: 攻撃, 2: 離脱）
+};
+
+// 各状態の実装
+void Enemy::Approach() {
+    cout << "敵が接近！" << endl;
+}
+
+void Enemy::Attack() {
+    cout << "敵が攻撃！" << endl;
+}
+
+void Enemy::Retreat() {
+    cout << "敵が離脱！" << endl;
+}
+
+// Update関数：状態遷移を行う
+void Enemy::Update() {
+    // 現在の状態に対応する関数を実行
+    (this->*stateTable[index])();
+
+    // 状態を切り替えるかどうかをユーザーに確認
+    cout << "次の状態に移行しますか？ (0: はい、他の数字: いいえ) > ";
+    int input;
+    cin >> input;
+
+    if (input == 0) {
+        index = (index + 1) % 3; // 0→1→2→0 のループ
     }
 }
 
-// 一定時間待ってからコールバックを呼ぶ（ラムダ不可）
-void setTimeout(std::function<void(int*, int*)> callback, int second, int key) {
-    for (int i = 0; i < second; ++i) {
-        Sleep(1000);
-        printf("%d...\n", second - i);
-    }
+// 関数ポインタテーブルの定義
+void (Enemy::* Enemy::stateTable[])() = {
+    &Enemy::Approach, // インデックス0
+    &Enemy::Attack,   // インデックス1
+    &Enemy::Retreat   // インデックス2
+};
 
-    int dummy = 0; // 意味はないが、関数引数を満たすため
-    callback(&dummy, &key);
-}
-
+// メイン関数
 int main() {
-    int userInput;
+    Enemy enemy;
 
-    srand(static_cast<unsigned int>(time(NULL)));
-
-    printf("丁(偶数)なら0、半(奇数)なら1を入力してください: ");
-    scanf_s("%d", &userInput);
-
-    if (userInput == 0) {
-        puts("あなたは丁(偶数)を選びました。");
+    while (true) {
+        enemy.Update();
     }
-    else {
-        puts("あなたは半(奇数)を選びました。");
-    }
-
-    // ラムダ式でユーザー入力をキャプチャし、コールバック関数を作成
-    std::function<void(int*, int*)> callback = [=](int* s, int* k) {
-        DispResult(s, k);
-        };
-
-    // SetTimeout関数で3秒待ってから結果を表示
-    setTimeout(callback, 3, userInput);
 
     return 0;
 }
