@@ -16,6 +16,7 @@ private:
     int index = 0; // 現在の状態を示すインデックス（0: 接近, 1: 攻撃, 2: 離脱）
 };
 
+
 // 各状態の実装
 void Enemy::Approach() {
     cout << "敵が接近！" << endl;
